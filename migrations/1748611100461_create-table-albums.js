@@ -1,7 +1,7 @@
 /**
  * @param {import('node-pg-migrate').MigrationBuilder} pgm
  */
-exports.up = (pgm) => {
+export function up(pgm) {
   pgm.createTable('albums', {
     id: {
       type: 'VARCHAR(50)',
@@ -16,11 +16,11 @@ exports.up = (pgm) => {
       notNull: true,
     },
   });
-};
+}
 
 /**
  * @param {import('node-pg-migrate').MigrationBuilder} pgm
  */
-exports.down = (pgm) => {
+export function down(pgm) {
   pgm.dropTable('albums');
-};
+}

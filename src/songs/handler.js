@@ -1,5 +1,3 @@
-// adiestypn/open-music-api-v1/open-music-api-v1-c960353ba1a3a781368d93ca721334e24ff20683/src/songs/handler.js
-
 class SongsHandler {
   constructor(service, validator) {
     this._service = service;

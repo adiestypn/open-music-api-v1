@@ -2,19 +2,19 @@ require('dotenv').config();
 
 const Hapi = require('@hapi/hapi');
 
-// Plugins
+
 const AlbumsPlugin = require('./albums/index');
 const SongsPlugin = require('./songs');
 
-// Services (untuk database)
+
 const AlbumsService = require('./services/postgres/AlbumsService'); 
 const SongsService = require('./services/postgres/SongsService');   
 
-// Validators
+
 const AlbumValidator = require('./validator/albums'); 
 const SongsValidator = require('./validator/songs');
 
-// Exceptions
+
 const ClientError = require('./exceptions/ClientError');
 
 const init = async () => {
@@ -24,7 +24,6 @@ const init = async () => {
   const server = Hapi.server({
     port: process.env.PORT,
     host: process.env.HOST,
-    //process.env.NODE_ENV !== 'production' ? 'localhost' : '0.0.0.0',
     routes: {
       cors: {
         origin: ['*'],
@@ -36,7 +35,7 @@ const init = async () => {
     const { response } = request;
 
     if (response instanceof Error) {
-      if (response instanceof ClientError) { // Lebih baik cek instance dari ClientError langsung
+      if (response instanceof ClientError) { 
         return h.response({
           status: 'fail',
           message: response.message,
@@ -47,7 +46,7 @@ const init = async () => {
         return h.continue;
       }
 
-      console.error(response); // Log server error
+      console.error(response); 
       return h.response({
         status: 'error',
         message: 'Terjadi kegagalan pada server kami.',

@@ -3,12 +3,13 @@
  */
 const shorthands = undefined;
 
-exports.shorthands = shorthands;
+const _shorthands = shorthands;
+export { _shorthands as shorthands };
 
 /**
  * @param {import('node-pg-migrate').MigrationBuilder} pgm
  */
-exports.up = (pgm) => {
+export function up(pgm) {
   pgm.createTable('songs', {
     id: {
       type: 'VARCHAR(50)',
@@ -47,11 +48,11 @@ exports.up = (pgm) => {
       notNull: true,
     },
   });
-};
+}
 
 /**
  * @param {import('node-pg-migrate').MigrationBuilder} pgm
  */
-exports.down = (pgm) => {
+export function down(pgm) {
   pgm.dropTable('songs');
-};
+}

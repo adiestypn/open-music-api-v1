@@ -5,7 +5,7 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 
 class AlbumsService {
   constructor() {
-    this._pool = new Pool(); // pg akan otomatis menggunakan environment variables (PGUSER, dll.)
+    this._pool = new Pool(); 
   }
 
   async addAlbum({ name, year }) {

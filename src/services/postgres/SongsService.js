@@ -11,13 +11,12 @@ class SongsService {
 
 async addSong({ title, year, genre, performer, duration, albumId }) {
   const id = `song-${nanoid(16)}`;
-  const insertedAt = new Date().toISOString(); // Tambahkan ini
-  const updatedAt = insertedAt; // Tambahkan ini, untuk awal sama dengan insertedAt
+  const insertedAt = new Date().toISOString(); 
+  const updatedAt = insertedAt; 
 
   const query = {
-    // Sesuaikan query INSERT Anda
     text: 'INSERT INTO songs(id, title, year, genre, performer, duration, album_id, inserted_at, updated_at) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
-    values: [id, title, year, genre, performer, duration, albumId, insertedAt, updatedAt], // Tambahkan insertedAt dan updatedAt ke values
+    values: [id, title, year, genre, performer, duration, albumId, insertedAt, updatedAt], 
   };
 
   const result = await this._pool.query(query);
@@ -29,7 +28,6 @@ async addSong({ title, year, genre, performer, duration, albumId }) {
 }
 
   async getSongs() {
-    // Sesuai Kriteria 3, GET /songs hanya mengembalikan id, title, performer
     const result = await this._pool.query('SELECT id, title, performer FROM songs');
     return result.rows;
   }
