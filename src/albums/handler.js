@@ -1,87 +1,81 @@
-const { nanoid } = require('nanoid');
-const ClientError = require('../exceptions/ClientError');
-const albums = [];
+// adiestypn/open-music-api-v1/open-music-api-v1-c960353ba1a3a781368d93ca721334e24ff20683/src/albums/handler.js
+
+const ClientError = require('../exceptions/ClientError'); // Path yang benar
 
 class AlbumsHandler {
   constructor(service, validator) {
     this._service = service;
-    this._validator = validator;
+    this._validator = validator; // AlbumValidator akan di-pass dan digunakan di sini
   }
 
-  addAlbumHandler(request, h) {
-    const { name, year } = request.payload;
-
-    if (typeof name !== 'string' || name.trim() === '') {
-      throw new ClientError('Gagal menambahkan album. Mohon isi nama album', 400);
+  addAlbumHandler = async (request, h) => {
+    // Validasi payload menggunakan validator yang di-inject
+    // Pastikan this._validator tidak null/undefined dan memiliki metode validateAlbumPayload
+    if (this._validator && typeof this._validator.validateAlbumPayload === 'function') {
+      this._validator.validateAlbumPayload(request.payload);
+    } else {
+      // Fallback ke validasi manual jika validator tidak tersedia atau tidak lengkap
+      // (Ini sebaiknya tidak terjadi jika DI (Dependency Injection) sudah benar)
+      const { name, year } = request.payload;
+      if (typeof name !== 'string' || name.trim() === '') {
+        throw new ClientError('Gagal menambahkan album. Mohon isi nama album', 400);
+      }
+      if (typeof year !== 'number') {
+        throw new ClientError('Gagal menambahkan album. Mohon isi tahun album dengan benar (angka)', 400);
+      }
     }
 
-    if (typeof year !== 'number') {
-      throw new ClientError('Gagal menambahkan album. Mohon isi tahun album dengan benar (angka)', 400);
-    }
-
-    const id = `album-${nanoid(16)}`;
-    albums.push({ id, name, year });
+    const albumId = await this._service.addAlbum(request.payload);
 
     return h.response({
       status: 'success',
-      data: { albumId: id },
+      data: { albumId },
     }).code(201);
-  }
+  };
 
-  getAlbumByIdHandler(request, h) {
+  getAlbumByIdHandler = async (request, h) => {
     const { id } = request.params;
-    const album = albums.find((a) => a.id === id);
-
-    if (!album) {
-      throw new ClientError('Album tidak ditemukan', 404);
-    }
+    const album = await this._service.getAlbumById(id);
 
     return {
       status: 'success',
       data: { album },
     };
-  }
+  };
 
-  editAlbumByIdHandler(request, h) {
+  editAlbumByIdHandler = async (request, h) => {
+    // Validasi payload menggunakan validator yang di-inject
+    if (this._validator && typeof this._validator.validateAlbumPayload === 'function') {
+      this._validator.validateAlbumPayload(request.payload);
+    } else {
+      // Fallback ke validasi manual
+      const { name, year } = request.payload;
+      if (typeof name !== 'string' || name.trim() === '') {
+        throw new ClientError('Gagal memperbarui album. Mohon isi nama album', 400);
+      }
+      if (typeof year !== 'number') {
+        throw new ClientError('Gagal memperbarui album. Mohon isi tahun album dengan benar (angka)', 400);
+      }
+    }
+
     const { id } = request.params;
-    const { name, year } = request.payload;
-
-    if (typeof name !== 'string' || name.trim() === '') {
-      throw new ClientError('Gagal memperbarui album. Mohon isi nama album', 400);
-    }
-
-    if (typeof year !== 'number') {
-      throw new ClientError('Gagal memperbarui album. Mohon isi tahun album dengan benar (angka)', 400);
-    }
-
-    const index = albums.findIndex((album) => album.id === id);
-    if (index === -1) {
-      throw new ClientError('Gagal memperbarui album. Id tidak ditemukan', 404);
-    }
-
-    albums[index] = { ...albums[index], name, year };
+    await this._service.editAlbumById(id, request.payload);
 
     return {
       status: 'success',
       message: 'Album berhasil diperbarui',
     };
-  }
+  };
 
-  deleteAlbumByIdHandler(request, h) {
+  deleteAlbumByIdHandler = async (request, h) => {
     const { id } = request.params;
-    const index = albums.findIndex((album) => album.id === id);
-
-    if (index === -1) {
-      throw new ClientError('Album gagal dihapus. Id tidak ditemukan', 404);
-    }
-
-    albums.splice(index, 1);
+    await this._service.deleteAlbumById(id);
 
     return {
       status: 'success',
       message: 'Album berhasil dihapus',
     };
-  }
+  };
 }
 
 module.exports = AlbumsHandler;

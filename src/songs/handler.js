@@ -1,42 +1,32 @@
-const { nanoid } = require('nanoid');
-const ClientError = require('../exceptions/ClientError');
-
-const songs = [];
+// adiestypn/open-music-api-v1/open-music-api-v1-c960353ba1a3a781368d93ca721334e24ff20683/src/songs/handler.js
 
 class SongsHandler {
-  constructor(_, validator) {
+  constructor(service, validator) {
+    this._service = service;
     this._validator = validator;
   }
 
-  addSongHandler = (request, h) => {
+  addSongHandler = async (request, h) => {
     this._validator.validateSongPayload(request.payload);
-
-    const { title, year, genre, performer, duration, albumId } = request.payload;
-    const id = `song-${nanoid(16)}`;
-
-    songs.push({ id, title, year, genre, performer, duration, albumId });
+    const songId = await this._service.addSong(request.payload);
 
     return h.response({
       status: 'success',
-      data: { songId: id },
+      data: { songId },
     }).code(201);
   };
 
-  getSongsHandler = () => {
-    const result = songs.map(({ id, title, performer }) => ({ id, title, performer }));
+  getSongsHandler = async () => {
+    const songs = await this._service.getSongs();
     return {
       status: 'success',
-      data: { songs: result },
+      data: { songs },
     };
   };
 
-  getSongByIdHandler = (request, h) => {
+  getSongByIdHandler = async (request, h) => {
     const { id } = request.params;
-    const song = songs.find((s) => s.id === id);
-
-    if (!song) {
-      throw new ClientError('Lagu tidak ditemukan', 404);
-    }
+    const song = await this._service.getSongById(id);
 
     return {
       status: 'success',
@@ -44,17 +34,10 @@ class SongsHandler {
     };
   };
 
-  editSongByIdHandler = (request, h) => {
+  editSongByIdHandler = async (request, h) => {
     this._validator.validateSongPayload(request.payload);
     const { id } = request.params;
-    const { title, year, genre, performer, duration, albumId } = request.payload;
-
-    const index = songs.findIndex((s) => s.id === id);
-    if (index === -1) {
-      throw new ClientError('Gagal memperbarui lagu. Id tidak ditemukan', 404);
-    }
-
-    songs[index] = { ...songs[index], title, year, genre, performer, duration, albumId };
+    await this._service.editSongById(id, request.payload);
 
     return {
       status: 'success',
@@ -62,15 +45,9 @@ class SongsHandler {
     };
   };
 
-  deleteSongByIdHandler = (request, h) => {
+  deleteSongByIdHandler = async (request, h) => {
     const { id } = request.params;
-    const index = songs.findIndex((s) => s.id === id);
-
-    if (index === -1) {
-      throw new ClientError('Lagu gagal dihapus. Id tidak ditemukan', 404);
-    }
-
-    songs.splice(index, 1);
+    await this._service.deleteSongById(id);
 
     return {
       status: 'success',

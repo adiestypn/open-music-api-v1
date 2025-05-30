@@ -1,15 +1,30 @@
 require('dotenv').config();
 
 const Hapi = require('@hapi/hapi');
+
+// Plugins
 const AlbumsPlugin = require('./albums/index');
+const SongsPlugin = require('./songs');
+
+// Services (untuk database)
+const AlbumsService = require('./services/postgres/AlbumsService'); 
+const SongsService = require('./services/postgres/SongsService');   
+
+// Validators
+const AlbumValidator = require('./validator/albums'); 
+const SongsValidator = require('./validator/songs');
+
+// Exceptions
 const ClientError = require('./exceptions/ClientError');
-const SongsPlugin = require('./songs'); // <- kalau belum ada, comment dulu
-const SongsValidator = require('./validator/songs'); // <- kalau belum ada, comment dulu
 
 const init = async () => {
+  const albumsService = new AlbumsService();
+  const songsService = new SongsService();
+
   const server = Hapi.server({
-    port: process.env.PORT || 5000,
-    host: process.env.HOST || 'localhost',
+    port: process.env.PORT,
+    host: process.env.HOST,
+    //process.env.NODE_ENV !== 'production' ? 'localhost' : '0.0.0.0',
     routes: {
       cors: {
         origin: ['*'],
@@ -21,7 +36,7 @@ const init = async () => {
     const { response } = request;
 
     if (response instanceof Error) {
-      if (response.name === 'ClientError' && response.statusCode) {
+      if (response instanceof ClientError) { // Lebih baik cek instance dari ClientError langsung
         return h.response({
           status: 'fail',
           message: response.message,
@@ -32,7 +47,7 @@ const init = async () => {
         return h.continue;
       }
 
-      console.error(response);
+      console.error(response); // Log server error
       return h.response({
         status: 'error',
         message: 'Terjadi kegagalan pada server kami.',
@@ -42,21 +57,22 @@ const init = async () => {
     return h.continue;
   });
 
-  // ✅ Daftar plugin di sini
-  await server.register({
-    plugin: AlbumsPlugin,
-    options: {
-      service: {},       // <- nanti diganti service beneran
-      validator: {},     // <- nanti ganti juga
+  await server.register([
+    {
+      plugin: AlbumsPlugin,
+      options: {
+        service: albumsService,
+        validator: AlbumValidator, 
+      },
     },
-  });
-
-  await server.register({
-    plugin: SongsPlugin,
-    options: {
-      validator: SongsValidator,
+    {
+      plugin: SongsPlugin,
+      options: {
+        service: songsService,
+        validator: SongsValidator,
+      },
     },
-  });
+  ]);
 
   await server.start();
   console.log(`Server berjalan pada ${server.info.uri}`);
