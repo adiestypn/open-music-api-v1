@@ -34,6 +34,10 @@ exports.up = (pgm) => {
       type: 'INTEGER',
       notNull: false,
     },
+    album_id: {
+      type: 'VARCHAR(50)',
+      notNull: false,
+    },
     inserted_at: {
       type: 'TEXT',
       notNull: true,
